@@ -1,0 +1,36 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin-left: 30%;
+  margin-right: 30%;
+}
+
+.multimedia {
+  display: flex;
+  flex-direction: row;
+}
+
+.multimedia p {
+  margin-right: 10px;
+}
+
+.body img {
+  justify-content: center;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+.sub-nav {
+    display: flex;
+   
+}
+
+.sub-nav p {
+    margin-left: 15px;
+}
