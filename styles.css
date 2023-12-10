@@ -4,6 +4,8 @@
   text-align: left;
   margin-left: 30%;
   margin-right: 30%;
+  font-family: "Roboto Mono", sans-serif;
+
 }
 
 .multimedia {
@@ -25,12 +27,36 @@
   align-items: center;
 }
 
-
 .sub-nav {
-    display: flex;
-   
+  display: flex;
 }
 
 .sub-nav p {
-    margin-left: 15px;
+  margin-left: 15px;
 }
+
+a {
+  color: #4c525c;
+  position: relative;
+  text-decoration: none;
+}
+
+a:hover{
+    color: black ;
+}
+/* 
+a::before {
+  background: hsl(45 100% 70%) ;
+  content: "";
+  inset: 0;
+  position: absolute;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s ease-in-out;
+  z-index: -1;
+}
+
+a:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+} */
