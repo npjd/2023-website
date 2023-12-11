@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.beginPath();
       ctx.moveTo(lx1, ly1);
       ctx.lineTo(lx2, ly2);
-      var hue = (t / 4) % 360; // Change hue value over time
+      var hue = ((t+i) / 3) % 360; // Change hue value over time
       ctx.strokeStyle = `hsl(${hue}, 95%, 75%)`; // Set stroke color
       ctx.lineWidth = 2; // Define line width
       ctx.stroke();
@@ -48,15 +48,16 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 const x1 = (t) => {
-  return-Math.sin(t / 10) * 100 + Math.sin(t / 5) * 20;
-};
-const y1 = (t) => {
-  return Math.cos(t / 10) * 100;
-};
-
-const x2 = (t) => {
-  return Math.sin(t / 5) * 200 + Math.sin(t) * 2;
-};
-const y2 = (t) => {
-  return Math.sin(t / 20) * 200 + Math.cos(t / 12) * 20;
-};
+    return Math.sin(t / 10) * 100 + Math.sin(t / 5) * 20;
+  };
+  const y1 = (t) => {
+    return Math.cos(t / 10) * 100;
+  };
+  
+  const x2 = (t) => {
+    return Math.sin(t / 10) * 200 + Math.sin(t) * 2;
+  };
+  const y2 = (t) => {
+    return Math.sin(t / 20) * 200 + Math.cos(t / 12) * 20;
+  };
+  
