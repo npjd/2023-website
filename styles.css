@@ -11,6 +11,8 @@
 .multimedia {
   display: flex;
   flex-direction: row;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .multimedia p {
@@ -61,8 +63,19 @@ a:hover {
 .image-container img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover
 }
+
+#background-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1; /* Places the canvas behind other elements */
+    pointer-events: none; /* Ensures clicks and mouse events pass through to elements below */
+    width: 100%; /* Adjust the canvas size to cover the entire viewport */
+    height: 100%; /* Adjust the canvas size to cover the entire viewport */
+  }
+  
 /* 
 a::before {
   background: hsl(45 100% 70%) ;
