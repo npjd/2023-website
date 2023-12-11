@@ -29,14 +29,14 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.lineTo(lx2, ly2);
       var hue = ((t + i) / 3) % 360; // Change hue value over time
       //   ctx.strokeStyle = `hsla(${hue}, 95%, 75%, 33%)`; // Set stroke color
-    //   ctx.strokeStyle = `rgba(0,0,0,${t+i})`;
-    ctx.strokeStyle = 'black'
+      //   ctx.strokeStyle = `rgba(0,0,0,${t+i})`;
+      ctx.strokeStyle = `rgba(0,0,0,0.15)`;
       ctx.lineWidth = 0.5; // Define line width
       ctx.stroke();
       ctx.closePath();
     }
 
-    t += 0.2;
+    t += 0.3;
 
     // Request the next frame
     requestAnimationFrame(draw);
