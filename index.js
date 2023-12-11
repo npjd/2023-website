@@ -12,7 +12,6 @@ document.addEventListener("DOMContentLoaded", function () {
   var shiftY = canvas.height / 2; // Center dot vertically
 
   var t = 0; // Initialize the value of t
-  var h = 0;
   var num_lines = 20;
 
   function draw() {
@@ -21,22 +20,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     for (let i = 0; i < num_lines; i++) {
-      lx1 = x1(t+i)*3 + shiftX;
-      ly1 = y1(t+i)*3 + shiftY;
-      lx2 = x2(t+i)*3 + shiftX;
-      ly2 = y2(t+i)*3 + shiftY;
+      lx1 = x1(t+i)*4 + shiftX;
+      ly1 = y1(t+i)*4 + shiftY;
+      lx2 = x2(t+i)*4 + shiftX;
+      ly2 = y2(t+i)*4 + shiftY;
 
       ctx.beginPath();
       ctx.moveTo(lx1, ly1);
       ctx.lineTo(lx2, ly2);
-      ctx.strokeStyle = "black"; // Define line color
+      var hue = (t / 4) % 360; // Change hue value over time
+      ctx.strokeStyle = `hsl(${hue}, 95%, 75%)`; // Set stroke color
       ctx.lineWidth = 2; // Define line width
       ctx.stroke();
       ctx.closePath();
     }
 
-    // Increment t for the next frame
-    t += 0.3;
+
+    t += 0.2;
+
 
     // Request the next frame
     requestAnimationFrame(draw);
@@ -47,14 +48,14 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 const x1 = (t) => {
-  return Math.sin(t / 10) * 100 + Math.sin(t / 5) * 20;
+  return-Math.sin(t / 10) * 100 + Math.sin(t / 5) * 20;
 };
 const y1 = (t) => {
   return Math.cos(t / 10) * 100;
 };
 
 const x2 = (t) => {
-  return Math.sin(t / 10) * 200 + Math.sin(t) * 2;
+  return Math.sin(t / 5) * 200 + Math.sin(t) * 2;
 };
 const y2 = (t) => {
   return Math.sin(t / 20) * 200 + Math.cos(t / 12) * 20;
