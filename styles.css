@@ -3,11 +3,19 @@
   flex-direction: column;
   text-align: left;
   font-family: "Roboto Mono", sans-serif;
-
+  font-weight: 400;
   margin: 0 auto;
   width: fit-content;
 }
 
+#about  >*{
+    margin-bottom: 25px;
+}
+
+
+.list li {
+    margin-bottom: 10px;
+}
 .multimedia {
   display: flex;
   flex-direction: row;
@@ -66,15 +74,29 @@ a:hover {
   object-fit: cover
 }
 
+#about {
+    max-width: 900px;
+}
+
+b {
+    font-weight: 700;
+    color: black;
+}
+
 #background-canvas {
     position: fixed;
-    top: 0;
+    top: 0px;
     left: 0;
     z-index: -1; /* Places the canvas behind other elements */
     pointer-events: none; /* Ensures clicks and mouse events pass through to elements below */
     width: 100%; /* Adjust the canvas size to cover the entire viewport */
     height: 100%; /* Adjust the canvas size to cover the entire viewport */
   }
+
+  #title {
+    color: #4c525c;
+  }
+  
   
 /* 
 a::before {
