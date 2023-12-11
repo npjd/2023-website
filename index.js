@@ -29,8 +29,8 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.moveTo(lx1, ly1);
       ctx.lineTo(lx2, ly2);
       var hue = ((t+i) / 3) % 360; // Change hue value over time
-      ctx.strokeStyle = `hsl(${hue}, 95%, 75%)`; // Set stroke color
-      ctx.lineWidth = 2; // Define line width
+      ctx.strokeStyle = `hsla(${hue}, 95%, 75%, 33%)`; // Set stroke color
+      ctx.lineWidth = 1.25; // Define line width
       ctx.stroke();
       ctx.closePath();
     }
