@@ -50,7 +50,7 @@ const x1 = (t) => {
   return Math.sin(t / 10) * 100 + Math.sin(t / 5) * 20;
 };
 const y1 = (t) => {
-  return Math.cos(t / 10) * 100;
+  return Math.sin(t / 10) * 100;
 };
 
 const x2 = (t) => {
