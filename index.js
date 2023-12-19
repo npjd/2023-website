@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var hue = ((t + i) / 3) % 360; // Change hue value over time
       //   ctx.strokeStyle = `hsla(${hue}, 95%, 75%, 33%)`; // Set stroke color
       //   ctx.strokeStyle = `rgba(0,0,0,${t+i})`;
-      ctx.strokeStyle = `rgba(0,0,0,0.12)`;
+      ctx.strokeStyle = `rgba(0,0,0,0.18)`;
       ctx.lineWidth = 0.5; // Define line width
       ctx.stroke();
       ctx.closePath();

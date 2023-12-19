@@ -6,6 +6,8 @@
   font-weight: 400;
   margin: 0 auto;
   width: fit-content;
+  background-color: #F8FFF4;
+  /* background-color: #FBF7F4; */
 }
 
 #about > * {
