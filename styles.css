@@ -6,7 +6,6 @@
   font-weight: 400;
   margin: 0 auto;
   width: fit-content;
-  background-color: #F8FFF4;
   /* background-color: #FBF7F4; */
 }
 
@@ -52,6 +51,15 @@ a {
   color: #4c525c;
   position: relative;
   text-decoration: none;
+}
+
+#about a {
+    text-decoration: underline;
+}
+
+#about li {
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 a:hover {
