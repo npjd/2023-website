@@ -21,21 +21,21 @@
       crossorigin="anonymous"
     ></script>
     <script
-  defer
-  src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js"
-  integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
-  crossorigin="anonymous"
-></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    renderMathInElement(document.body, {
-      delimiters: [
-        {left: "$$", right: "$$", display: true},
-        {left: "$", right: "$", display: false},
-      ]
-    });
-  });
-</script>
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js"
+      integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$", right: "$", display: false },
+          ],
+        });
+      });
+    </script>
     <title>Training Multimodal</title>
   </head>
   <body class="body">
@@ -62,7 +62,17 @@
       <p>
         TLDR: We achieve competitive results in multimodal AI using late fusion
         techniques, training an 8B parameter model on a single 8xH100 cluster,
-        <b><u>outperforming similar-sized open-source models across various benchmarks for less than $2000</u></b>
+        <b
+          ><u
+            >outperforming similar-sized open-source models across various
+            benchmarks for less than $2000</u
+          ></b
+        >
+      </p>
+      <p>
+        We also test out an early fusion architecture and determine that while
+        it initially underperforms compared to late fusion, it shows potential
+        for richer cross-modal learning given more extensive training
       </p>
       <p>
         <a href="https://github.com/omegalabsinc/omega-a2a"
