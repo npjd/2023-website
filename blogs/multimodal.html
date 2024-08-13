@@ -21,12 +21,21 @@
       crossorigin="anonymous"
     ></script>
     <script
-      defer
-      src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js"
-      integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
-      crossorigin="anonymous"
-      onload="renderMathInElement(document.body);"
-    ></script>
+  defer
+  src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js"
+  integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
+  crossorigin="anonymous"
+></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false},
+      ]
+    });
+  });
+</script>
     <title>Training Mulitmodal</title>
   </head>
   <body class="body">
@@ -624,7 +633,7 @@
       <p>
         This is trained only on 100 million samples for less than 3k steps! We
         use GCP (startup credits!) and do training runs on a single 8xH100
-        cluster for about 3 days. On Lambda Labs @ $2.99 / GPU / hr, this would
+        cluster for about 3 days. On Lambda Labs @ 2.99 / H100 / hr, this would
         less than $2000 — for pretty good results
       </p>
       <h4 id="eval-results">Eval Results</h4>
@@ -665,7 +674,7 @@
         </tbody>
       </table>
       <p>
-        (zero-shot — source
+        (these are all zero-shot — source
         <a href="https://huggingface.co/spaces/opencompass/open_vlm_leaderboard"
           >https://huggingface.co/spaces/opencompass/open_vlm_leaderboard</a
         >)
@@ -851,7 +860,7 @@
       </ul>
       <p>
         These are some out of the many ideas that me and
-        <a href="https://paulbridger.com/">PB</a>would brainstorm about
+        <a href="https://paulbridger.com/">PB</a> would brainstorm about
       </p>
       <h4 id="including-separate-attention-heads-for-multimedia-inputs">
         Including Separate Attention Heads for Multimedia Inputs
