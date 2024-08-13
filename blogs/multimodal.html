@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="../styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Roboto+Mono"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css"
+      integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq"
+      crossorigin="anonymous"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js"
+      integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js"
+      integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
+      crossorigin="anonymous"
+      onload="renderMathInElement(document.body);"
+    ></script>
+    <title>Toronto Slang</title>
+  </head>
+  <body class="body">
+    <div class="navbar">
+      <h1><a href="../index.html"> > Nima Pourjafar </a></h1>
+      <div class="sub-nav">
+        <p>
+          <a href="../projects.html"> [ projects ]</a>
+        </p>
+        <p>
+          <a href="../blog.html"> [ blog ]</a>
+        </p>
+      </div>
+    </div>
+
+    <div id="about">
+      <video
+        src="../photos/multimodal/vid.mp4"
+        width="800px"
+        autoplay
+        loop
+        muted
+      ></video>
+      <p>
+        TLDR: We achieve competitive results in multimodal AI using late fusion
+        techniques, training an 8B parameter model on a single 8xH100 cluster,
+        outperforming larger open-source models across various benchmarks
+      </p>
+      <p>
+        <a href="https://github.com/omegalabsinc/omega-a2a"
+          >Want to just see our experimental code: check it out here!</a
+        >
+      </p>
+      <p>
+        <a href="https://github.com/omegalabsinc/omegalabs-anytoany-bittensor"
+          >Want to start training your own model? Check out the Omega Labs
+          subnet! Get paid (enough to cover compute) to train your own models</a
+        >
+      </p>
+      <p>
+        <a href="https://huggingface.co/nimapourjafar"
+          >I also have a bunch of multimodal datasets you can check out on
+          Hugging Face exported to conversation formats</a
+        >
+      </p>
+      <p>
+        (figure one will be this graphi with our evals, visual comparing with
+        late fusion vs early fusion + evals )
+      </p>
+      <h1 id="quick-background">Quick Background</h1>
+      <p>
+        I spent a good chunk of summer at Omega Labs helping them kickoff their
+        experiments with multimodal artificial intelligence — from creating
+        datasets, setting up training code, and doing the runs
+      </p>
+      <p>
+        A big issue I found while doing this is the lack of resources and
+        libraries. Between the dozens of training and eval libraries and
+        optimizations being researched — there seems to be a &quot;late&quot;
+        focus on developing good tools for training multimodal intelligence
+      </p>
+      <p>
+        So, I tried to make it my goal this summer to both have some code (which
+        I will talk about at the end) and writing (this) to address an issue I
+        got pretty deep into
+      </p>
+      <p>Hope you enjoy!</p>
+      <h1 id="what-is-multimodal-and-why-">What is Multimodal and Why?</h1>
+      <p>
+        Machine learning, particularly deep learning, has made remarkable
+        progress in recent years. Many of the most successful and widely-used
+        models focus on single modalities:
+      </p>
+      <ol>
+        <li>
+          Natural Language Processing (NLP): Models like GPT (Generative
+          Pre-trained Transformer), BERT, and Mamba
+        </li>
+        <li>
+          Computer Vision: Convolutional Neural Networks (CNNs) and Vision
+          Transformers (ViT)
+        </li>
+        <li>Speech Recognition: Models such as DeepSpeech and Wav2Vec</li>
+      </ol>
+      <p>
+        While these single modality models excel in their specific domains, they
+        are limited to processing and understanding only one type of data input.
+        They are trained for the purposes of a specific &quot;pipeline&quot;
+      </p>
+      <ul>
+        <li>text2text</li>
+        <li>image2text</li>
+        <li>audio2text</li>
+        <li>image2video</li>
+        <li>and more...</li>
+      </ul>
+      <p>
+        It can become easy to see the number of &quot;pipeline
+        permutations&quot; we have grows fast. If we consider only 3 main
+        modalities — text, audio, and video (images can be one frame of
+        video...), that means we would need $3*3=9$ state-of-the-art models in
+        each modality to have tools to cover all possible pipelines
+      </p>
+      <p>
+        Multimodal models are individual models that cover all of these
+        pipelines, so they win in terms of application-efficiency
+      </p>
+      <h2 id="is-multimodal-provably-better-than-unimodal-">
+        Is Multimodal Provably better than Unimodal?
+      </h2>
+      <p>
+        This is a great question! I feel like our intuition says &quot;yes&quot;
+        because humans are naturally &quot;multimodal&quot; so we should model
+        our models off that. But a proof that&#39;s more robust is one presented
+        by
+        <a
+          href="https://proceedings.neurips.cc/paper/2021/file/5aa3405a3f865c10f420a4a7b55cbff3-Paper.pdf"
+          >the Institute for Interdisciplinary Information Sciences et. al in
+          this paper
+        </a>
+      </p>
+      <p>
+        Suppose we have a machine learning task that involves data from multiple
+        different modalities - for example, images, text, and audio. We can
+        choose to train an encoder using all of these modalities (a multimodal
+        model), or we can select a subset of the available modalities using just
+        that reduced set of inputs (a uni-modal model)
+      </p>
+      <p>
+        Formally, the paper defines a &quot;latent representation function&quot;
+        $\hat{g}$ that maps the raw input data into a common latent space
+      </p>
+      <p>
+        The crucial finding is that $\hat{g}_M$ (our multimodal model) will be
+        closer to the true underlying latent space $g^*$ compared to $\hat{g}_N$
+        (our uni-modal model). This improved &quot;latent representation
+        quality&quot; is what allows the multimodal model to achieve lower
+        population risk - a measure of the model&#39;s expected error or loss on
+        the overall data distribution, not just the training set
+      </p>
+      <p>
+        The intuition is that by leveraging the complementary information
+        contained across the multiple data modalities, the multimodal model can
+        learn a more comprehensive and accurate representation of the latent
+        structure inherent in the data. This latent space is the foundation upon
+        which the final task-specific mapping is built, so having a higher
+        quality latent representation translates directly to better end-to-end
+        performance
+      </p>
+
+      <img src="../photos/multimodal/provably_paper.png" width="800px" />
+      <h2 id="does-multimodal-scale-">Does Multimodal Scale?</h2>
+      <p>
+        A natural question to have is if training multiple modalities is more
+        cost-efficient?
+      </p>
+      <p>
+        I have not come across any formal literature to prove this, but in this
+        <a href="https://arxiv.org/pdf/2301.03728"
+          >scaling laws paper by FAIR</a
+        >
+        — training on speech and text modalities together at 30B scale is
+        somehow better than training 2 separate 30B models on each domain. You
+        can say this also applies to existing multimodal models like GPT-4V,
+        LlaVA, and others
+      </p>
+      <p>
+        The big point here is how multimodal is a very elegant next-step in
+        existing models. From what we&#39;ve discussed about
+        &quot;higher-quality&quot; latents and also scaling, there is no reason
+        to incorporate more mixed data and shared latent representations in
+        generative models (which transformers dominate right now)
+      </p>
+      <h2 id="late-fusion-early-fusion">Late Fusion &amp;&amp; Early Fusion</h2>
+      <p>
+        How do we do that? There are currently two main methods — both of which
+        I&#39;ve experimented with over the summer
+      </p>
+      <h4 id="late-fusion">Late Fusion</h4>
+      <p>Late fusion multimodal models consist of:</p>
+      <ol>
+        <li>Separate unimodal networks for each input modality</li>
+        <li>A fusion mechanism that combines the outputs of these networks</li>
+      </ol>
+      <p>
+        A common version of this is training a projection layers for each
+        modalities encoders for a pre-trained transformer
+      </p>
+      <p>
+        Take a look at LlaVA&#39;s architecture, the $W$ projection part is
+        trained to take an image $X_V$ that gets encoded by encoder $Z<em
+          >v$ (this can be any embedding model ex. CLIP), so that the language
+          model $f</em
+        >{\phi}$ understands it
+      </p>
+      <img src="../photos/multimodal/late_fusion_image.png" />
+      <p>
+        I&#39;ll talk more about the actual application of these methods in the
+        Experiments section
+      </p>
+      <h3 id="early-fusion">Early Fusion</h3>
+      <p>
+        Early fusion, on the other hand, combines the different modalities at
+        the input level or very early in the network architecture. The process
+        typically involves:
+      </p>
+      <ol>
+        <li>
+          Concatenating or otherwise combining the raw input features from
+          different modalities
+        </li>
+        <li>Passing this combined input through a single, unified network</li>
+      </ol>
+      <p>
+        The reason this is called &quot;early&quot; compare to late is that we
+        are learning each modality within the model &quot;earlier&quot; than
+        just making a general model we can encode several modalities to
+        &quot;later&quot;
+      </p>
+      <p>
+        With transformers (again) we would typically approach early fusion by
+        modifying the tokenization and embedding process to handle multiple
+        modalities simultaneously
+      </p>
+      <ol>
+        <li>
+          Unified tokenization: Instead of having separate tokenizers for each
+          modality, we create a single tokenizer that can handle different types
+          of input (this is the interesting problem!)
+        </li>
+        <li>
+          Shared vocabulary: We create a comprehensive vocabulary that includes
+          tokens for all modalities. This means our model&#39;s embedding layer
+          needs to be able to represent text, image patches, audio segments, and
+          any other modalities we&#39;re working with
+        </li>
+        <li>
+          Positional and modality encoding: Along with the token embeddings, we
+          add:
+          <ul>
+            <li>
+              Positional encodings to provide sequence information for each
+              modality
+            </li>
+            <li>
+              Modality-specific encodings to help the model distinguish between
+              different types of input. We can use media tags to do this! ( ex.
+              &lt;img&gt; put image tokens here...&lt;/img&gt;)
+            </li>
+          </ul>
+        </li>
+        <li>
+          Single transformer stack: All these embeddings are then fed into a
+          single transformer architecture. This allows the self-attention
+          mechanisms to operate across all modalities from the very beginning of
+          the network
+        </li>
+      </ol>
+      <p>
+        The key advantage of this early fusion approach is that it allows the
+        model to learn cross-modal relationships from the ground up. The
+        transformer can potentially discover complex interactions between
+        modalities that might be missed in a late fusion approach
+      </p>
+      <h4 id="how-does-multimodal-tokenization-work-">
+        How Does Multimodal Tokenization Work?
+      </h4>
+      <p>
+        This could be a whole article on its own, and that is not a bad thing!
+        The research on this topic is extremely interesting, and also — in my
+        opinion — very early
+      </p>
+      <p>
+        The backbone behind much of the research, and existing models (Chameleon
+        by Meta, Gemini, and probably GPT-4o) tokenizers are Vector Quantized
+        Variational Autoencoders (VQ-VAE)
+      </p>
+      <h5 id="variational-autoencoders-vaes-">
+        Variational Autoencoders (VAEs)
+      </h5>
+      <p>
+        VAEs are a type of generative model that learn to compress
+        high-dimensional data into a lower-dimensional latent space. They
+        consist of two main components:
+      </p>
+      <ol>
+        <li>
+          An encoder network that maps input data $x$ to a distribution $q(z|x)$
+          over latent variables $z$
+        </li>
+        <li>
+          A decoder network that reconstructs the input from samples of the
+          latent variables
+        </li>
+      </ol>
+      <p>
+        This objective encourages the model to learn a compact, meaningful
+        latent representation while still being able to reconstruct the input
+        data accurately
+      </p>
+      <h5 id="vector-quantized-vaes-vq-vaes-">
+        Vector Quantized VAEs (VQ-VAEs)
+      </h5>
+      <p>
+        VQ-VAEs build upon the VAE framework but introduce a crucial
+        modification: discrete latent variables. Here&#39;s how they work:
+      </p>
+      <ol>
+        <li>
+          Encoder: Similar to VAEs, the encoder maps input $x$ to a continuous
+          latent space
+        </li>
+        <li>
+          Vector Quantization: Instead of directly using this continuous
+          representation, VQ-VAEs quantize it using a codebook of discrete
+          vectors
+          <ul>
+            <li>
+              The encoder&#39;s output is replaced by its nearest neighbor in
+              the codebook
+            </li>
+            <li>
+              This process can be thought of as assigning each latent vector to
+              a &quot;code&quot; in the codebook
+            </li>
+          </ul>
+        </li>
+        <li>
+          Decoder: The decoder then reconstructs the input from these discrete
+          codes
+        </li>
+      </ol>
+      <p>
+        Codebooks are a key component of VQ-VAEs. A codebook is essentially a
+        dictionary of learned vector representations, also known as
+        &quot;codes&quot; or &quot;embeddings&quot;. Each code in the codebook
+        represents a prototype or archetype of a particular feature or pattern
+        in the data. During the forward pass, the continuous output of the
+        encoder is matched to its nearest neighbor in the codebook, effectively
+        discretizing the latent space
+      </p>
+      <p>
+        Training the codebook is an integral part of the VQ-VAE learning
+        process. The codebook vectors are updated using an exponential moving
+        average of the encoder outputs assigned to them. This allows the
+        codebook to adapt to the data distribution over time
+      </p>
+      <p>
+        If you are wondering what the final tokens look like, they are just the
+        indexes of each codebook vector used
+      </p>
+      <p>
+        It makes sense why this is called &quot;Vector Quantized&quot; now. We
+        use vectors within our codebook to discretize latents into integers, so
+        we can use them as tokens
+      </p>
+      <img src="../photos/multimodal/vq_vae_image.png" width="800px" />
+      <h4 id="why-does-this-work-">Why does this work?</h4>
+      <p>
+        The first point is obvious: their discrete latent space naturally aligns
+        with tokenization. But a more elegant reason is how they sidestep the
+        <a
+          href="https://datascience.stackexchange.com/questions/48962/what-is-posterior-collapse-phenomenon"
+          >posterior collapse problem</a
+        >
+        that plagues standard VAEs. By quantizing the latent space, VQ-VAEs
+        force the model to use these discrete codes meaningfully, ensuring that
+        the latent representation captures important features of the input data
+      </p>
+      <h2 id="experiments">Experiments</h2>
+      <p>
+        A starting point for all experiments was forking
+        <a href="https://github.com/pytorch/torchtune">torchtune</a> and
+        modifying Llama3&#39;s architecture. The existing fine-tuning support is
+        amazing — the PyTorch team really carries this industry on their backs
+      </p>
+      <p>
+        All of our experiments use the instruct Llama3-8B on half-precision,
+        with runs only using a single 8xH100 node. We do a whole fine-tune of
+        all the Llama3 weights using LoRA — we found LoRA cheaper + faster than
+        QLoRA
+      </p>
+      <p>We did training runs for both late fusion and early fusion</p>
+      <ul>
+        <li>
+          We used image-bind embeddings + a learned MLP layer for our late
+          fusion model
+        </li>
+        <li>
+          For our early-fusion model, we used a pre-trained VQ-VAE checkpoint
+          trained on image-net + an additional embedding layer
+        </li>
+      </ul>
+      <p>
+        <strong
+          >We achieve competitive state-of-the-art results to similar-sized
+          open-source models</strong
+        >
+      </p>
+      <h3 id="data">Data</h3>
+      <p>
+        We mostly relied on converting existing image, audio, text, and video
+        datasets into a common conversation format that we could do
+        orchestration on
+      </p>
+      <p>
+        If you check out
+        <a href="https://huggingface.co/nimapourjafar">my hugging face</a>
+        you&#39;ll see a bunch of datasets prefixed with &quot;mm&quot; that
+        have been converted to do that
+      </p>
+      <p>
+        Something we tried was using WebDataset + GCP object store as to not
+        have to download these datasets to our machines disks all the time
+      </p>
+      <img src="../photos/multimodal/webdatasets.png" width="800px" />
+      <p>Streaming helps with this</p>
+      <p>
+        <a href="https://cloud.google.com/storage/pricing"
+          >Object store storage is also cheaper than machine disk storage
+        </a>
+      </p>
+      <p>
+        <strong>Standard Object Storage</strong>: Suitable for frequently
+        accessed data
+      </p>
+      <ul>
+        <li><strong>Price</strong>: $0.026 per GB per month in the US</li>
+      </ul>
+      <p>
+        <strong>Standard Persistent Disk</strong>: Suitable for general-purpose
+        workoads.
+      </p>
+      <ul>
+        <li><strong>Price</strong>: $0.04 per GB per month</li>
+      </ul>
+      <p>
+        WebDataset also lets you easily store encoded versions of image, audio,
+        and video. A common mistake I ran into was decoding the media when doing
+        processing on it, and pushing that. You&#39;ll end up with super bloated
+        datasets
+      </p>
+      <p>
+        It is easy to convert existing huggingface datasets to WebDataset format
+        though
+      </p>
+      <pre><code class="lang-python"><span class="hljs-keyword">import</span> webdataset <span class="hljs-keyword">as</span> wds
+<span class="hljs-keyword">import</span> io
+<span class="hljs-keyword">import</span> json
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">write_to_webdataset</span><span class="hljs-params">(dataset, output_path, samples_per_shard=<span class="hljs-number">10000</span>)</span>:</span>
+    <span class="hljs-keyword">with</span> wds.ShardWriter(output_path, maxcount=samples_per_shard) <span class="hljs-keyword">as</span> sink:
+        <span class="hljs-keyword">for</span> i, sample <span class="hljs-keyword">in</span> enumerate(dataset):
+            <span class="hljs-comment"># Convert sample to WebDataset format</span>
+            key = f<span class="hljs-string">"{i:08d}"</span>
+
+            <span class="hljs-comment"># Assuming 'image' and 'label' are fields in your dataset</span>
+            <span class="hljs-comment"># Adjust these based on your actual dataset structure</span>
+            image_bytes = io.BytesIO()
+            sample[<span class="hljs-string">'image'</span>].save(image_bytes, format=<span class="hljs-string">'PNG'</span>)
+
+            sink.write({
+                f<span class="hljs-string">"{key}.png"</span>: image_bytes.getvalue(),
+                f<span class="hljs-string">"{key}.json"</span>: json.dumps({<span class="hljs-string">"label"</span>: sample[<span class="hljs-string">'label'</span>]})
+            })
+</code></pre>
+      <p>
+        We made a pretty clean system to just wrap all these datasets using a
+        round robin scheduler
+      </p>
+      <pre><code class="lang-python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RoundRobinDataset</span>(<span class="hljs-title">IterableDataset</span>):</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, datasets, tokenizer, world_size=<span class="hljs-number">1</span>, rank=<span class="hljs-number">0</span>, perception_tokens=<span class="hljs-number">1</span>, **kwargs)</span></span>:
+        <span class="hljs-keyword">self</span>._ds_cfg = datasets
+        <span class="hljs-keyword">self</span>._tokenizer = tokenizer
+        <span class="hljs-keyword">self</span>._world_size = world_size
+        <span class="hljs-keyword">self</span>._rank = rank
+        <span class="hljs-keyword">self</span>._perception_tokens = perception_tokens
+        <span class="hljs-keyword">self</span>._kwargs = kwargs
+        <span class="hljs-keyword">self</span>._reset_datasets()
+        <span class="hljs-keyword">self</span>._len = reduce(add, <span class="hljs-keyword">self</span>._ds_lengths)
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">_reset_datasets</span><span class="hljs-params">(<span class="hljs-keyword">self</span>)</span></span>:
+        <span class="hljs-keyword">self</span>._datasets = [
+            instantiate(
+                cfg,
+                tokenizer=<span class="hljs-keyword">self</span>._tokenizer,
+                world_size=<span class="hljs-keyword">self</span>._world_size,
+                rank=<span class="hljs-keyword">self</span>._rank,
+                perception_tokens=<span class="hljs-keyword">self</span>._perception_tokens,
+                **<span class="hljs-keyword">self</span>._kwargs
+            )
+            <span class="hljs-keyword">for</span> cfg <span class="hljs-keyword">in</span> <span class="hljs-keyword">self</span>._ds_cfg
+        ]
+        <span class="hljs-keyword">self</span>._ds_indexes = [<span class="hljs-number">0</span> <span class="hljs-keyword">for</span> d <span class="hljs-keyword">in</span> <span class="hljs-keyword">self</span>._datasets]
+        <span class="hljs-keyword">self</span>._ds_lengths = [len(ds) <span class="hljs-keyword">for</span> ds <span class="hljs-keyword">in</span> <span class="hljs-keyword">self</span>._datasets]
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__len__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>)</span></span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">self</span>._len
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__iter__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>)</span></span>:
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">self</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__next__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>)</span></span>:
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">self</span>.<span class="hljs-symbol">_datasets:</span>
+            <span class="hljs-keyword">self</span>._reset_datasets()
+            raise StopIteration()
+
+        <span class="hljs-comment"># take next sample from ds with lowest progression</span>
+        <span class="hljs-number">_</span>, next_ds_idx = sorted([
+                (ds_idx / ds_len, i)
+                <span class="hljs-keyword">for</span> i, (ds_idx, ds_len)
+                <span class="hljs-keyword">in</span> enumerate(zip(<span class="hljs-keyword">self</span>._ds_indexes, <span class="hljs-keyword">self</span>._ds_lengths))
+        ])[<span class="hljs-number">0</span>]
+
+        <span class="hljs-symbol">try:</span>
+            sample = <span class="hljs-keyword">next</span>(<span class="hljs-keyword">self</span>._datasets[next_ds_idx])
+            <span class="hljs-keyword">self</span>._ds_indexes[next_ds_idx] += <span class="hljs-number">1</span>
+            <span class="hljs-keyword">return</span> sample
+        except <span class="hljs-symbol">StopIteration:</span>
+            del <span class="hljs-keyword">self</span>._datasets[next_ds_idx], <span class="hljs-keyword">self</span>._ds_indexes[next_ds_idx], <span class="hljs-keyword">self</span>._ds_lengths[next_ds_idx]
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">next</span>(<span class="hljs-keyword">self</span>)
+</code></pre>
+      <h3 id="late-fusion-training">Late Fusion Training</h3>
+      <p>We decided to wrap the existing token embeddings with a new layer:</p>
+      <pre><code class="lang-python">llama3<span class="hljs-selector-class">.tok_embeddings</span> = MMEmbedding(llama3.tok_embeddings)
+</code></pre>
+      <p>For now, <code>MMEmbedding</code> is just an interface:</p>
+      <pre><code class="lang-python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MMEmbedding</span>(<span class="hljs-title">nn</span>.<span class="hljs-title">Module</span>):</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>)</span></span>:
+        <span class="hljs-keyword">super</span>().__init_<span class="hljs-number">_</span>()
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">set_input_context</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, mm_context)</span></span>:
+        raise NotImplementedError()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, tokens)</span></span>:
+        raise NotImplementedError()
+</code></pre>
+      <p>
+        For late-fusion, we created <code>MMProjectionEmbedding</code> to use a
+        projection layer that converts image embeddings set in an &quot;input
+        context&quot; to Llama embeddings:
+      </p>
+      <pre><code class="lang-python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MMProjectionEmbedding</span>(<span class="hljs-title">MMEmbedding</span>):</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, perception_tokens, embedding_dim, embed_keys, output_dim)</span></span>:
+        <span class="hljs-keyword">super</span>().__init_<span class="hljs-number">_</span>()
+        <span class="hljs-keyword">self</span>._perception_tokens = perception_tokens
+        <span class="hljs-keyword">self</span>._embedding_dim = embedding_dim
+        <span class="hljs-keyword">self</span>._embed_keys = embed_keys
+        <span class="hljs-keyword">self</span>._context = []
+
+        dim_out = output_dim <span class="hljs-keyword">if</span> <span class="hljs-keyword">self</span>._perception_tokens == <span class="hljs-number">257</span> <span class="hljs-keyword">else</span> output_dim * <span class="hljs-keyword">self</span>._perception_tokens
+        <span class="hljs-keyword">self</span>.proj_to_llama = nn.Sequential(
+            nn.Linear(<span class="hljs-keyword">self</span>._embedding_dim, dim_out),
+            nn.GELU(),
+            nn.LayerNorm(dim_out),
+            nn.Linear(dim_out, dim_out),
+        )
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">set_input_context</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, mm_context)</span></span>:
+        <span class="hljs-keyword">self</span>._context = [
+            {<span class="hljs-symbol">s:</span> torch.cat([embed[k] <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> <span class="hljs-keyword">self</span>._embed_keys], dim=-<span class="hljs-number">1</span>)
+             <span class="hljs-keyword">for</span> s, embed <span class="hljs-keyword">in</span> context_dict.items()}
+            <span class="hljs-keyword">for</span> context_dict <span class="hljs-keyword">in</span> mm_context
+        ]
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, <span class="hljs-symbol">tokens:</span> Tensor, <span class="hljs-symbol">h:</span> Tensor)</span></span> -&gt; <span class="hljs-symbol">Tensor:</span>
+        <span class="hljs-keyword">for</span> b, context_dict <span class="hljs-keyword">in</span> enumerate(<span class="hljs-keyword">self</span>._context):
+            <span class="hljs-keyword">for</span> s, embed <span class="hljs-keyword">in</span> context_dict.items():
+                llama_embed = <span class="hljs-keyword">self</span>.proj_to_llama(embed)
+                llama_embed = llama_embed.view(<span class="hljs-keyword">self</span>._perception_tokens, -<span class="hljs-number">1</span>)
+                h[b, <span class="hljs-symbol">s:</span>s+<span class="hljs-keyword">self</span>._perception_tokens] = llama_embed[<span class="hljs-symbol">:h</span>.size(<span class="hljs-number">1</span>)-s]
+        <span class="hljs-keyword">return</span> h
+</code></pre>
+      <p>
+        This approach means multimedia inputs don&#39;t get explicitly
+        positionally encoded in the sequence by Llama&#39;s RoPE. It&#39;s not a
+        big issue since multimedia data usually appears at the end or beginning
+        of sequences. Including more interleaved data helps mitigate this
+      </p>
+      <h4 id="using-imagebind-audio-understanding-just-from-images-">
+        Using ImageBind (Audio Understanding just from Images!)
+      </h4>
+      <p>
+        We chose to use ImageBind by Meta for late fusion training, as it&#39;s
+        a native multimodal embedding model. We ran an experiment training
+        solely on image data, then using embeddings in our model&#39;s forward
+        audio pass. The theory was that the projection layer trained on
+        ImageBind image layers would also learn audio and video, since ImageBind
+        embeddings share a common latent space
+      </p>
+      <img src="../photos/multimodal/audio_gen.png" width="800px" />
+      <p>
+        This turned out to be true! We achieved this using about 10 million
+        text-image pairs, which demonstrates why multimodal training is provably
+        better
+      </p>
+      <p>The same thing worked w/ videos + audio</p>
+      <img src="../photos/multimodal/omega_sample.png" />
+      <p>
+        This is trained only on 100 million samples for less than 3k steps! We
+        use GCP (startup credits!) and do training runs on a single 8xH100
+        cluster for about 3 days. On Lambda Labs @ $2.99 / GPU / hr, this would
+        less than $2000 — for pretty good results
+      </p>
+      <h4 id="eval-results">Eval Results</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Ours (8B)</th>
+            <th>Qwen-VL (7B)</th>
+            <th>Claude 3.5 Sonnet</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>RealWorldQA</td>
+            <td>44.1%</td>
+            <td>37.8%</td>
+            <td>60.1%</td>
+          </tr>
+          <tr>
+            <td>MMMU</td>
+            <td>29.8%</td>
+            <td>29.6%</td>
+            <td>65.9%</td>
+          </tr>
+          <tr>
+            <td>AI2D</td>
+            <td>54.5%</td>
+            <td>57.7%</td>
+            <td>80.2%</td>
+          </tr>
+          <tr>
+            <td>MathVista</td>
+            <td>19.3%</td>
+            <td>15.5%</td>
+            <td>61.6%</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        (zero-shot — source
+        <a href="https://huggingface.co/spaces/opencompass/open_vlm_leaderboard"
+          >https://huggingface.co/spaces/opencompass/open_vlm_leaderboard</a
+        >)
+      </p>
+      <p>
+        We keep up with Qwen-VL who are also leaders in the open source space!
+      </p>
+      <h4 id="multimodal-evals">Multimodal Evals</h4>
+      <p>
+        <a href="https://github.com/EvolvingLMMs-Lab/lmms-eval">lmms-eval</a> is
+        a library identical to the
+        <a href="https://github.com/EleutherAI/lm-evaluation-harness"
+          >EleutherAI llm-eval-harness</a
+        >— but for multimodal evals
+      </p>
+      <p>
+        Using it on your own model is relatively simple — just wrap your model
+        in their inference class
+      </p>
+      <p>
+        They have a pretty robust
+        <a
+          href="https://github.com/EleutherAI/lm-evaluation-harness/tree/main/lm_eval/tasks"
+          >list of tasks</a
+        >
+        to try out, and you can also implement
+        <a
+          href="https://github.com/EleutherAI/lm-evaluation-harness/blob/main/docs/new_task_guide.md"
+          >your own tasks</a
+        >
+      </p>
+      <h3 id="early-fusion-training">Early Fusion Training</h3>
+      <p>
+        We extend <code>MMEmbedding</code> now. We also leverage pre-trained
+        models from the
+        <a href="https://github.com/CompVis/taming-transformers"
+          >the original VQ-GAN paper
+        </a>
+        to utilize VQ-VAEs
+      </p>
+      <pre><code class="lang-python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MMVQVAEEmbedding</span>(<span class="hljs-title">MMEmbedding</span>):</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, vocab_size, perception_tokens, output_dim)</span></span>:
+        <span class="hljs-keyword">super</span>().__init_<span class="hljs-number">_</span>()
+        <span class="hljs-keyword">self</span>._embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=output_dim)
+        <span class="hljs-keyword">self</span>._perception_tokens = perception_tokens
+        <span class="hljs-keyword">self</span>._context = []
+        <span class="hljs-keyword">self</span>._embed_keys = [<span class="hljs-string">"vqvae"</span>]
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">set_input_context</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, mm_context)</span></span>:
+        param = <span class="hljs-keyword">next</span>(<span class="hljs-keyword">self</span>.parameters())
+        device, dtype = param.device, torch.long
+        <span class="hljs-keyword">self</span>._context = [
+            {
+                <span class="hljs-symbol">s:</span> torch.cat([embed[k] <span class="hljs-keyword">for</span> k <span class="hljs-keyword">in</span> <span class="hljs-keyword">self</span>._embed_keys]).to(device, dtype)
+                <span class="hljs-keyword">for</span> s, embed <span class="hljs-keyword">in</span> context_dict.items()
+            }
+            <span class="hljs-keyword">for</span> context_dict <span class="hljs-keyword">in</span> mm_context
+        ]
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">forward</span><span class="hljs-params">(<span class="hljs-keyword">self</span>, <span class="hljs-symbol">tokens:</span> Tensor, <span class="hljs-symbol">h:</span> Tensor)</span></span> -&gt; <span class="hljs-symbol">Tensor:</span>
+        <span class="hljs-keyword">for</span> b, context_dict <span class="hljs-keyword">in</span> enumerate(<span class="hljs-keyword">self</span>._context):
+            <span class="hljs-comment"># then by sequence idx</span>
+            <span class="hljs-keyword">for</span> s, vae_tokens <span class="hljs-keyword">in</span> context_dict.items():
+                <span class="hljs-comment"># and then must be transformed from tokens -&gt; llama3 dim</span>
+                llama_embed = <span class="hljs-keyword">self</span>._embedding(vae_tokens)[<span class="hljs-symbol">:h</span>.size(<span class="hljs-number">1</span>) - s]
+                h[b, <span class="hljs-symbol">s:</span>s+<span class="hljs-keyword">self</span>._perception_tokens] = llama_embed
+        <span class="hljs-keyword">return</span> h
+</code></pre>
+      <p>
+        We have a new embedding table that takes in the VQ-VAE codebook ids to
+        llama3&#39;s embedding dim
+      </p>
+      <h4 id="eval-results">Eval Results</h4>
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Ours (8B)</th>
+            <th>Qwen-VL (7B)</th>
+            <th>Claude 3.5 Sonnet</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>RealWorldQA</td>
+            <td>25.4%</td>
+            <td>37.8%</td>
+            <td>60.1%</td>
+          </tr>
+          <tr>
+            <td>MMMU</td>
+            <td>20.2%</td>
+            <td>29.6%</td>
+            <td>65.9%</td>
+          </tr>
+          <tr>
+            <td>AI2D</td>
+            <td>31.1%</td>
+            <td>57.7%</td>
+            <td>80.2%</td>
+          </tr>
+          <tr>
+            <td>MathVista</td>
+            <td>5.3%</td>
+            <td>15.5%</td>
+            <td>61.6%</td>
+          </tr>
+        </tbody>
+      </table>
+      <h4 id="late-fusion-vs-early-fusion">Late Fusion Vs Early Fusion</h4>
+      <p>
+        When comparing the evals, late-fusion comes out superior. But it&#39;s
+        not reasonable to rule out early-fusion as a method completely yet
+      </p>
+      <img src="../photos/multimodal/late_fusion_loss.png" width="800px" />
+      <p>Late Fusion Loss</p>
+      <img src="../photos/multimodal/early_fusion_loss.png" width="800px" />
+      <p>Early Fusion Loss</p>
+      <p>
+        A big reason why the early fusion model is doing worse is because of how
+        we&#39;ve artificially increased the vocab size of our model — these
+        parameters we need to &quot;re-learn&quot; are much more abundant than
+        the projection layer parameters learned in the late fusion method
+      </p>
+      <p>How does the loss graph reflect this?</p>
+      <p>
+        The early fusion loss graph exhibits a sharper initial drop followed by
+        a more volatile and higher loss throughout the training. This volatility
+        can be attributed to the larger parameter space created by the increased
+        vocabulary size, which complicates the learning process. The model
+        struggles to optimize these additional parameters, leading to the
+        observed instability
+      </p>
+      <p>
+        This just means that there is more learning to be done by early fusion
+        models though, which is a good thing!
+      </p>
+      <p>
+        The larger parameter space means the model is not just learning isolated
+        representations of each modality but is also learning to
+        cross-communicate between them. This cross-learning through interleaved
+        data can lead to richer and more nuanced representations of the input,
+        potentially capturing intricate relationships between modalities that
+        late fusion might miss
+      </p>
+      <p>
+        This will require bigger training runs with more data — which we did not
+        test out (yet!)
+      </p>
+      <h2 id="future">Future</h2>
+      <h4 id="better-vq-vae">Better VQ VAE</h4>
+      <p>
+        <a href="https://arxiv.org/html/2310.05737v2"
+          >Google &amp; CMU have done some work on using VQ VAEs + 3D CNNs to
+          create video tokenizers — which when used in transformers do better on
+          image + video generation than diffusion.</a
+        >
+        They dub that &quot;Tokenizer Is Key to Visual Generation&quot;
+      </p>
+      <p>
+        The two-key things that makes their tokenizer so good is using a huge
+        vocabulary size with small embedding sizes — what they dub
+        &quot;lookup-free quantization&quot; (LFQ) — and a joint image-video
+        architecture that can effectively tokenize both images and videos using
+        a shared codebook
+      </p>
+      <p>There is so much room for more experimentation here:</p>
+      <ul>
+        <li>
+          Investigating more interplay between vocabulary size, embedding
+          dimensionality, and model depth
+        </li>
+        <li>
+          Integrating self-attention within 3D-CNNs to improve local and global
+          spatiotemporal dependencies in visual tokens
+        </li>
+        <li>
+          Have a &quot;time-aligned&quot; architecture where you can combine
+          both audio + visual tokens to create video ones, maybe use attention
+          (again) here
+        </li>
+      </ul>
+      <p>
+        These are some out of the many ideas that me and
+        <a href="https://paulbridger.com/">PB</a>would brainstorm about
+      </p>
+      <h4 id="including-separate-attention-heads-for-multimedia-inputs">
+        Including Separate Attention Heads for Multimedia Inputs
+      </h4>
+      <p>
+        A very easy thing to add to make late fusion better is having separate
+        attention and feed-forward layers for the other multimodal features
+        (which are separated from the text features)
+      </p>
+      <p>
+        We trained on everything using the same attentions heads because of how
+        we though there would be cross-learning when using mixed text + image
+        data — but adding these new parameters would ensure the model is
+        learning from each modality independently before integrating the
+        information
+      </p>
+      <img src="../photos/multimodal/cog_vlm.png" width="800px" />
+
+      <p>
+        <a href="https://arxiv.org/pdf/2311.03079"
+          >Credit to the CogVLM paper</a
+        >
+      </p>
+      <h2 id="thanks-for-reading-">Thanks for reading!</h2>
+      <p>
+        If you made it to the end, thanks! If you had any other questions about
+        this article, do not hesitate to reach out to my
+        <a href="mailto:nima.pourjafar123@gmail.com">email</a> or
+        <a href="https://twitter.com/PourjafarNima">twitter</a>. If you think
+        this work is interesting, Omega Labs is hiring for full-time research
+        engineers. I&#39;d be happy to refer anyone who pings me — including any
+        Waterloo students looking for a next co-op
+      </p>
+      <p>
+        Additionally, I am looking for work either for Winter 2025 or Summer
+        2025. You can learn about me more on my website, but if you or your
+        organization is working on problems that require doing training
+        infrastructure, scaling data jobs, or anything you think I align with —
+        ping me as well!
+      </p>
+      <p>Cheers!</p>
+    </div>
+  </body>
+</html>
